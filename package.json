@@ -1,5 +1,5 @@
 {
-  "name": "@uniswap/merkle-distributor",
+  "name": "@iroiro/merkle-distributor",
   "author": {
     "name": "Moody Salem"
   },
@@ -15,7 +15,7 @@
     "url": "https://github.com/Uniswap/merkle-distributor"
   },
   "files": [
-    "build"
+    "contracts"
   ],
   "engines": {
     "node": ">=10"
