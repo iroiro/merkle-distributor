@@ -22,8 +22,8 @@ export interface MerkleDistributorInfo {
   }
 }
 
-type OldFormat = { [account: string]: number | string }
-type NewFormat = { address: string; earnings: string; reasons: string }
+export type OldFormat = { [account: string]: number | string }
+export type NewFormat = { address: string; earnings: string; reasons: string }
 
 export function parseBalanceMap(balances: OldFormat | NewFormat[]): MerkleDistributorInfo {
   // if balances are in an old format, process them
