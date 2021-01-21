@@ -4,7 +4,7 @@
     "name": "Moody Salem"
   },
   "description": "📦 A smart contract that distributes a balance of tokens according to a merkle root",
-  "version": "1.0.6",
+  "version": "1.0.8",
   "homepage": "https://uniswap.org",
   "keywords": [
     "uniswap",
@@ -16,11 +16,13 @@
   },
   "files": [
     "contracts",
-    "src"
+    "dist"
   ],
   "engines": {
     "node": ">=10"
   },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "devDependencies": {
     "@openzeppelin/contracts": "3.1.0",
     "@types/chai": "^4.2.6",
@@ -39,7 +41,7 @@
   },
   "scripts": {
     "precompile": "rimraf ./build/",
-    "compile": "waffle",
+    "compile": "waffle && tsc",
     "pretest": "yarn compile",
     "test": "mocha",
     "generate-merkle-root": "ts-node scripts/generate-merkle-root.ts",
