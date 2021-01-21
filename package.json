@@ -4,7 +4,7 @@
     "name": "Moody Salem"
   },
   "description": "📦 A smart contract that distributes a balance of tokens according to a merkle root",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "homepage": "https://uniswap.org",
   "keywords": [
     "uniswap",
@@ -47,5 +47,8 @@
     "generate-merkle-root": "ts-node scripts/generate-merkle-root.ts",
     "generate-merkle-root:example": "ts-node scripts/generate-merkle-root.ts --input scripts/example.json",
     "prepublishOnly": "yarn test"
+  },
+  "dependencies": {
+    "ethers": "^5.0.1"
   }
 }
