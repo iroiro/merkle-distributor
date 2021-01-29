@@ -45,6 +45,7 @@
     "pretest": "yarn compile",
     "test": "mocha",
     "generate-merkle-root": "ts-node scripts/generate-merkle-root.ts",
+    "generate-string-merkle-root": "ts-node scripts/generate-string-merkle-root.ts",
     "generate-merkle-root:example": "ts-node scripts/generate-merkle-root.ts --input scripts/example.json",
     "prepublishOnly": "yarn test"
   },
