@@ -66,10 +66,13 @@ describe('StringMerkleDistributor', () => {
       )
     })
 
-    describe('two account tree', () => {
+    describe('two hashes tree', () => {
       let distributor: Contract
       let tree: BalanceTree
-      let uuidList = [...Array(2)].map(_ => uuidv4())
+      let uuidList = [
+        '42330217-bdab-440d-9500-2bb253ce547f',
+        '89a11414-839a-4719-a8d9-d7774fbaf3c4'
+      ]
       let hashedUUIDList = uuidList.map(uuid =>
           utils.solidityKeccak256(["string"], [uuid])
       )
@@ -401,7 +404,7 @@ describe('StringMerkleDistributor', () => {
         const claim = claims[hashed]
         await expect(distributor.claim(claim.index, hashed, claim.amount, claim.proof, overrides))
           .to.emit(distributor, 'Claimed')
-          .withArgs(claim.index, hashed, claim.amount)
+          .withArgs(claim.index, wallet0.address, claim.amount)
         await expect(distributor.claim(claim.index, hashed, claim.amount, claim.proof, overrides)).to.be.revertedWith(
           'MerkleDistributor: Drop already claimed.'
         )
