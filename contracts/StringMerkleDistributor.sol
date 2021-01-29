@@ -33,7 +33,7 @@ contract StringMerkleDistributor is IStringMerkleDistributor {
 
     function claim(
         uint256 index,
-        string target,
+        string memory target,
         uint256 amount,
         bytes32[] calldata merkleProof
     ) virtual public override {
@@ -47,6 +47,6 @@ contract StringMerkleDistributor is IStringMerkleDistributor {
         _setClaimed(index);
         require(IERC20(token).transfer(msg.sender, amount), 'StringMerkleDistributor: Transfer failed.');
 
-        emit Claimed(index, account, amount);
+        emit Claimed(index, msg.sender, amount);
     }
 }
