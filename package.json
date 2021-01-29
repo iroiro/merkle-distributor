@@ -27,6 +27,7 @@
     "@openzeppelin/contracts": "3.1.0",
     "@types/chai": "^4.2.6",
     "@types/mocha": "^5.2.7",
+    "@types/uuid": "^8.3.0",
     "axios": "^0.20.0",
     "chai": "^4.2.0",
     "commander": "^6.1.0",
@@ -37,7 +38,8 @@
     "rimraf": "^3.0.0",
     "solc": "0.6.11",
     "ts-node": "^8.5.4",
-    "typescript": "^3.7.3"
+    "typescript": "^3.7.3",
+    "uuid": "^8.3.2"
   },
   "scripts": {
     "precompile": "rimraf ./build/",
