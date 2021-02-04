@@ -1,6 +1,12 @@
 import { BigNumber } from 'ethers'
 import BalanceTree from './string-balance-tree'
 
+export interface Claim {
+    index: number
+    amount: string
+    proof: string[]
+}
+
 // This is the blob that gets distributed and pinned to IPFS.
 // It is completely sufficient for recreating the entire merkle tree.
 // Anyone can verify that all air drops are included in the tree,
@@ -9,11 +15,7 @@ export interface MerkleDistributorInfo {
   merkleRoot: string
   tokenTotal: string
   claims: {
-    [hashed: string]: {
-      index: number
-      amount: string
-      proof: string[]
-    }
+    [hashed: string]: Claim
   }
 }
 

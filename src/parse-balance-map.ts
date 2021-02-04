@@ -3,6 +3,15 @@ import BalanceTree from './balance-tree'
 
 const { isAddress, getAddress } = utils
 
+export interface Claim {
+  index: number
+  amount: string
+  proof: string[]
+  flags?: {
+    [flag: string]: boolean
+  }
+}
+
 // This is the blob that gets distributed and pinned to IPFS.
 // It is completely sufficient for recreating the entire merkle tree.
 // Anyone can verify that all air drops are included in the tree,
@@ -11,14 +20,7 @@ export interface MerkleDistributorInfo {
   merkleRoot: string
   tokenTotal: string
   claims: {
-    [account: string]: {
-      index: number
-      amount: string
-      proof: string[]
-      flags?: {
-        [flag: string]: boolean
-      }
-    }
+    [account: string]: Claim
   }
 }
 
