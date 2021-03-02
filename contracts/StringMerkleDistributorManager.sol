@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 contract StringMerkleDistributorManager {
     mapping(uint256 => address) public tokenMap;
     mapping(uint256 => bytes32) public merkleRootMap;
+    mapping(uint256 => uint256) public remainingAmountMap;
 
     // This is a packed array of booleans.
     mapping(uint256 => mapping(uint256 => uint256)) private claimedBitMap;
@@ -34,6 +35,7 @@ contract StringMerkleDistributorManager {
         bytes32[] calldata merkleProof
     ) virtual public {
         require(!isClaimed(campaignId, index), 'MerkleDistributor: Drop already claimed.');
+        require(amount <= remainingAmountMap[campaignId], "MerkleDistributor: Insufficient token.");
 
         // Verify the merkle proof.
         bytes32 node = keccak256(abi.encodePacked(index, target, amount));
@@ -42,6 +44,7 @@ contract StringMerkleDistributorManager {
         // Mark it claimed and send the token.
         _setClaimed(campaignId, index);
         require(IERC20(tokenMap[campaignId]).transfer(msg.sender, amount), 'MerkleDistributor: Transfer failed.');
+        remainingAmountMap[campaignId] = remainingAmountMap[campaignId] - amount;
 
         emit Claimed(index, msg.sender, amount);
     }
