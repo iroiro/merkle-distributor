@@ -46,8 +46,8 @@ contract MerkleDistributorManager {
         require(IERC20(tokenMap[campaignId]).transfer(account, amount), 'MerkleDistributor: Transfer failed.');
         remainingAmountMap[campaignId] = remainingAmountMap[campaignId] - amount;
 
-        emit Claimed(index, account, amount);
+        emit Claimed(campaignId, index, account, amount);
     }
 
-    event Claimed(uint256 index, address account, uint256 amount);
+    event Claimed(uint256 campaignId, uint256 index, address account, uint256 amount);
 }
