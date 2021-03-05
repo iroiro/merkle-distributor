@@ -3,35 +3,9 @@ pragma solidity =0.7.6;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
+import "./interfaces/IMerkleDistributorManager.sol";
 
-contract StringMerkleDistributorManager {
-    struct Distribution {
-        address token;
-        bytes32 merkleRoot;
-        uint256 remainingAmount;
-    }
-
-    mapping(uint64 => Distribution) distributionMap;
-
-    // This is a packed array of booleans.
-    mapping(uint256 => mapping(uint256 => uint256)) private claimedBitMap;
-
-    function isClaimed(uint64 campaignId, uint256 index) public view returns (bool) {
-        uint256 claimedWordIndex = index / 256;
-        uint256 claimedBitIndex = index % 256;
-        uint256 claimedWord = claimedBitMap[campaignId][claimedWordIndex];
-        uint256 mask = (1 << claimedBitIndex);
-        return claimedWord & mask == mask;
-    }
-
-    function _setClaimed(uint64 campaignId, uint256 index) private {
-        uint256 claimedWordIndex = index / 256;
-        uint256 claimedBitIndex = index % 256;
-        Distribution storage dist = distributionMap[campaignId];
-        claimedBitMap[campaignId][claimedWordIndex] =
-        claimedBitMap[campaignId][claimedWordIndex] | (1 << claimedBitIndex);
-    }
-
+contract StringMerkleDistributorManager is IMerkleDistributorManager {
     function claim(
         uint64 campaignId,
         uint256 index,
@@ -54,6 +28,4 @@ contract StringMerkleDistributorManager {
 
         emit Claimed(campaignId, index, msg.sender, amount);
     }
-
-    event Claimed(uint64 campaignId, uint256 index, address account, uint256 amount);
 }
