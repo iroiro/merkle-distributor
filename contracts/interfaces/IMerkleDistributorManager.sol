@@ -3,45 +3,62 @@ pragma solidity =0.7.6;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
+import "../SafeMath64.sol";
 
 contract IMerkleDistributorManager {
+    using SafeMath64 for uint64;
+
     struct Distribution {
         address token;
         bytes32 merkleRoot;
         uint256 remainingAmount;
     }
 
+    uint64 public nextDistributionId = 1;
     mapping(uint64 => Distribution) public distributionMap;
 
     // This is a packed array of booleans.
     mapping(uint256 => mapping(uint256 => uint256)) private claimedBitMap;
 
-    function token(uint64 campaignId) external view returns(address) {
-        return distributionMap[campaignId].token;
+    function token(uint64 distributionId) external view returns (address) {
+        return distributionMap[distributionId].token;
     }
 
-    function merkleRoot(uint64 campaignId) external view returns(bytes32) {
-        return distributionMap[campaignId].merkleRoot;
+    function merkleRoot(uint64 distributionId) external view returns (bytes32) {
+        return distributionMap[distributionId].merkleRoot;
     }
 
-    function remainingAmount(uint64 campaignId) external view returns(uint256) {
-        return distributionMap[campaignId].remainingAmount;
+    function remainingAmount(uint64 distributionId) external view returns (uint256) {
+        return distributionMap[distributionId].remainingAmount;
     }
 
-    function isClaimed(uint64 campaignId, uint256 index) public view returns (bool) {
+    function isClaimed(uint64 distributionId, uint256 index) public view returns (bool) {
         uint256 claimedWordIndex = index / 256;
         uint256 claimedBitIndex = index % 256;
-        uint256 claimedWord = claimedBitMap[campaignId][claimedWordIndex];
+        uint256 claimedWord = claimedBitMap[distributionId][claimedWordIndex];
         uint256 mask = (1 << claimedBitIndex);
         return claimedWord & mask == mask;
     }
 
-    function _setClaimed(uint64 campaignId, uint256 index) internal {
+    function _setClaimed(uint64 distributionId, uint256 index) internal {
         uint256 claimedWordIndex = index / 256;
         uint256 claimedBitIndex = index % 256;
-        claimedBitMap[campaignId][claimedWordIndex] =
-        claimedBitMap[campaignId][claimedWordIndex] | (1 << claimedBitIndex);
+        claimedBitMap[distributionId][claimedWordIndex] =
+        claimedBitMap[distributionId][claimedWordIndex] | (1 << claimedBitIndex);
     }
 
-    event Claimed(uint64 campaignId, uint256 index, address account, uint256 amount);
+    function addDistribution(
+        address payable token,
+        bytes32 merkleRoot,
+        uint256 allowance
+    ) public {
+        Distribution memory dist = Distribution(token, merkleRoot, allowance);
+        distributionMap[nextDistributionId] = dist;
+        nextDistributionId = nextDistributionId.add(1);
+        IERC20 erc20 = IERC20(token);
+
+        erc20.transferFrom(msg.sender, address(this), allowance);
+    }
+
+    event Claimed(uint64 distributionId, uint256 index, address account, uint256 amount);
 }

@@ -7,14 +7,14 @@ import "./interfaces/IMerkleDistributorManager.sol";
 
 contract StringMerkleDistributorManager is IMerkleDistributorManager {
     function claim(
-        uint64 campaignId,
+        uint64 distributionId,
         uint256 index,
         string memory target,
         uint256 amount,
         bytes32[] calldata merkleProof
     ) virtual public {
-        require(!isClaimed(campaignId, index), 'MerkleDistributor: Drop already claimed.');
-        Distribution storage dist = distributionMap[campaignId];
+        require(!isClaimed(distributionId, index), 'MerkleDistributor: Drop already claimed.');
+        Distribution storage dist = distributionMap[distributionId];
         require(amount <= dist.remainingAmount, "MerkleDistributor: Insufficient token.");
 
         // Verify the merkle proof.
@@ -22,10 +22,10 @@ contract StringMerkleDistributorManager is IMerkleDistributorManager {
         require(MerkleProof.verify(merkleProof, dist.merkleRoot, node), 'MerkleDistributor: Invalid proof.');
 
         // Mark it claimed and send the token.
-        _setClaimed(campaignId, index);
+        _setClaimed(distributionId, index);
         require(IERC20(dist.token).transfer(msg.sender, amount), 'MerkleDistributor: Transfer failed.');
         dist.remainingAmount = dist.remainingAmount - amount;
 
-        emit Claimed(campaignId, index, msg.sender, amount);
+        emit Claimed(distributionId, index, msg.sender, amount);
     }
 }
