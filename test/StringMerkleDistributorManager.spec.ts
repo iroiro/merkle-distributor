@@ -430,4 +430,86 @@ describe('StringMerkleDistributorManager', () => {
       expect(await token.balanceOf(manager.address)).to.eq(0)
     })
   })
+
+  describe("multiple distribution", () => {
+    let manager: Contract
+    let tree: BalanceTree
+    let uuidList = [
+      '42330217-bdab-440d-9500-2bb253ce547f',
+      '89a11414-839a-4719-a8d9-d7774fbaf3c4'
+    ]
+    let hashedUUIDList = uuidList.map(uuid =>
+        utils.solidityKeccak256(["string"], [uuid])
+    )
+
+    describe("different tokens", () => {
+      beforeEach(async () => {
+        tree = new BalanceTree([
+          { hashed: hashedUUIDList[0], amount: BigNumber.from(100) },
+          { hashed: hashedUUIDList[1], amount: BigNumber.from(100) },
+        ])
+        manager = await deployContract(wallet0, DistributorManager, [], overrides)
+        await token.setBalance(wallet0.address, 100)
+        await token.approve(manager.address, 100);
+        await token2.setBalance(wallet0.address, 100)
+        await token2.approve(manager.address, 100);
+        await manager.addDistribution(token.address, tree.getHexRoot(), 100, [])
+        await manager.addDistribution(token2.address, tree.getHexRoot(), 100, [])
+      });
+
+      it("send proper token when user claimed", async () => {
+        const proof0 = tree.getProof(0, hashedUUIDList[0], BigNumber.from(100))
+        expect( ( await token.balanceOf( wallet0.address ) ).toString() ).to.equal("0");
+        await manager.claim( 1, 0, hashedUUIDList[0], 100, proof0)
+        expect( (await token.balanceOf(manager.address)).toString() ).to.equal("0");
+        expect( ( await token.balanceOf(wallet0.address) ).toString() ).to.equal("100");
+        expect( (await token2.balanceOf(manager.address)).toString() ).to.equal("100");
+      });
+    });
+
+    describe("same tokens", () => {
+      beforeEach(async () => {
+        tree = new BalanceTree([
+          { hashed: hashedUUIDList[0], amount: BigNumber.from(100) },
+          { hashed: hashedUUIDList[1], amount: BigNumber.from(100) },
+        ])
+        manager = await deployContract(wallet0, DistributorManager, [], overrides)
+        await token.setBalance(wallet0.address, 100)
+        await token.approve(manager.address, 100);
+        await manager.addDistribution(token.address, tree.getHexRoot(), 100, [])
+        await token.setBalance(wallet0.address, 100)
+        await token.approve(manager.address, 100);
+        await manager.addDistribution(token.address, tree.getHexRoot(), 100, [])
+      });
+
+      it("balance is summed up", async () => {
+        expect( (await token.balanceOf(manager.address)).toString() ).to.equal("200");
+      });
+
+      it("claim use each campaign token", async () => {
+        const proof0 = tree.getProof(0, hashedUUIDList[0], BigNumber.from(100))
+        await manager.claim( 1, 0, hashedUUIDList[0], 100, proof0)
+        await manager.claim( 2, 0, hashedUUIDList[0], 100, proof0)
+      });
+
+      it("decrease remaining map", async () => {
+        const proof0 = tree.getProof(0, hashedUUIDList[0], BigNumber.from(100))
+        await manager.claim( 1, 0, hashedUUIDList[0], 100, proof0)
+        expect(await manager.remainingAmount("1")).to.equal(0);
+        expect(await manager.remainingAmount("2")).to.equal(100);
+        await manager.claim( 2, 0, hashedUUIDList[0], 100, proof0)
+        expect(await manager.remainingAmount("1")).to.equal(0);
+        expect(await manager.remainingAmount("2")).to.equal(0);
+      });
+
+      it("claim does not use other campaign's tokens", async () => {
+        const proof0 = tree.getProof(0, hashedUUIDList[0], BigNumber.from(100))
+        await manager.claim( 1, 0, hashedUUIDList[0], 100, proof0)
+        const proof1 = tree.getProof(1, hashedUUIDList[1], BigNumber.from(100))
+        await expect(
+            manager.connect(wallet1).claim( 1, 1, hashedUUIDList[1], 100, proof1)
+        ).to.be.revertedWith("MerkleDistributor: Insufficient token.");
+      });
+    });
+  });
 })
