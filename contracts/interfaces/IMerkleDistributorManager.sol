@@ -48,14 +48,14 @@ contract IMerkleDistributorManager {
     }
 
     function addDistribution(
-        address payable token,
-        bytes32 merkleRoot,
+        address payable newToken,
+        bytes32 newMerkleRoot,
         uint256 allowance
     ) public {
-        Distribution memory dist = Distribution(token, merkleRoot, allowance);
+        Distribution memory dist = Distribution(newToken, newMerkleRoot, allowance);
         distributionMap[nextDistributionId] = dist;
         nextDistributionId = nextDistributionId.add(1);
-        IERC20 erc20 = IERC20(token);
+        IERC20 erc20 = IERC20(newToken);
 
         erc20.transferFrom(msg.sender, address(this), allowance);
     }
