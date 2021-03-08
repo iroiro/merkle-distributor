@@ -60,5 +60,10 @@ contract IMerkleDistributorManager {
         erc20.transferFrom(msg.sender, address(this), allowance);
     }
 
-    event Claimed(uint64 distributionId, uint256 index, address account, uint256 amount);
+    event Claimed(
+        uint64 indexed distributionId,
+        uint256 index,
+        address indexed account,
+        uint256 amount
+    );
 }

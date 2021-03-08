@@ -243,7 +243,7 @@ describe('StringMerkleDistributorManager', () => {
         const proof = tree.getProof(0, hashedUUIDList[0], BigNumber.from(100))
         const tx = await manager.claim(1, 0, hashedUUIDList[0], 100, proof, overrides)
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(89180)
+        expect(receipt.gasUsed).to.eq(89396)
       })
     })
 
@@ -297,7 +297,7 @@ describe('StringMerkleDistributorManager', () => {
         const proof = tree.getProof(9, hashedUUIDList[9], BigNumber.from(10))
         const tx = await manager.claim(1, 9, hashedUUIDList[9], 10, proof, overrides)
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(91632)
+        expect(receipt.gasUsed).to.eq(91849)
       })
 
       it('gas second down about 15k', async () => {
@@ -318,7 +318,7 @@ describe('StringMerkleDistributorManager', () => {
             overrides
         )
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(61664)
+        expect(receipt.gasUsed).to.eq(61881)
       })
     })
 

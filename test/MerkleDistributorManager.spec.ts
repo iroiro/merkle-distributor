@@ -230,7 +230,7 @@ describe('MerkleDistributorManager', () => {
         const proof = tree.getProof(0, wallet0.address, BigNumber.from(100))
         const tx = await manager.claim(1, 0, wallet0.address, 100, proof, overrides)
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(87472)
+        expect(receipt.gasUsed).to.eq(87689)
       })
     })
 
@@ -268,7 +268,7 @@ describe('MerkleDistributorManager', () => {
         const proof = tree.getProof(9, wallets[9].address, BigNumber.from(10))
         const tx = await manager.claim(1, 9, wallets[9].address, 10, proof, overrides)
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(89966)
+        expect(receipt.gasUsed).to.eq(90183)
       })
 
       it('gas second down about 15k', async () => {
@@ -289,7 +289,7 @@ describe('MerkleDistributorManager', () => {
           overrides
         )
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(74946)
+        expect(receipt.gasUsed).to.eq(75163)
       })
     })
 
