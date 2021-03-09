@@ -243,7 +243,7 @@ describe('StringMerkleDistributorManager', () => {
         const proof = tree.getProof(0, hashedUUIDList[0], BigNumber.from(100))
         const tx = await manager.claim(1, 0, hashedUUIDList[0], 100, proof, overrides)
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(89396)
+        expect(receipt.gasUsed).to.eq(88927)
       })
     })
 
@@ -297,7 +297,7 @@ describe('StringMerkleDistributorManager', () => {
         const proof = tree.getProof(9, hashedUUIDList[9], BigNumber.from(10))
         const tx = await manager.claim(1, 9, hashedUUIDList[9], 10, proof, overrides)
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(91849)
+        expect(receipt.gasUsed).to.eq(91379)
       })
 
       it('gas second down about 15k', async () => {
@@ -318,7 +318,7 @@ describe('StringMerkleDistributorManager', () => {
             overrides
         )
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(61881)
+        expect(receipt.gasUsed).to.eq(61411)
       })
     })
 
@@ -372,12 +372,12 @@ describe('StringMerkleDistributorManager', () => {
     let tree: BalanceTree
     const NUM_LEAVES_LIST = [40, 50, 60]
     const NUM_SAMPLES_LIST = [5, 10, 20]
-    const GAS_LIST = [93512, 93512, 93512]
-    const SECOND_GAS_LIST = [63506, 63506, 63506]
-    const DEEPER_NODE_GAS_LIST = [93526, 93526, 93526]
-    const AVERAGE_GAS_LIST = [69510, 66512, 65011]
-    const FIRST25_AVERAGE_GAS_LIST = [64676, 64676, 64676]
-    const ALL_AVERAGE_GAS_LIST = [64238, 64076, 63953]
+    const GAS_LIST = [93042, 93042, 93042]
+    const SECOND_GAS_LIST = [63036, 63036, 63036]
+    const DEEPER_NODE_GAS_LIST = [93056, 93056, 93056]
+    const AVERAGE_GAS_LIST = [69040, 66042, 64541]
+    const FIRST25_AVERAGE_GAS_LIST = [64207, 64207, 64207]
+    const ALL_AVERAGE_GAS_LIST = [63768, 63606, 63483]
 
     for(let j = 0; j < NUM_LEAVES_LIST.length; j++) {
       describe(`leaves: ${NUM_LEAVES_LIST[j]}`, () => {
@@ -563,25 +563,25 @@ describe('StringMerkleDistributorManager', () => {
       const proof1 = tree.getProof(0, hashed, BigNumber.from(100))
       const tx1 = await manager.claim(1, 0, hashed, 100, proof1, overrides)
       const receipt1 = await tx1.wait()
-      expect(receipt1.gasUsed).to.eq(93492)
+      expect(receipt1.gasUsed).to.eq(93022)
 
       // second distribution, first claim
       const proof2 = tree.getProof(0, hashed, BigNumber.from(100))
       const tx2 = await manager.claim(2, 0, hashed, 100, proof2, overrides)
       const receipt2 = await tx2.wait()
-      expect(receipt2.gasUsed).to.eq(78492)
+      expect(receipt2.gasUsed).to.eq(78022)
 
       // first distribution, second claim
       const proof3 = tree.getProof(1, hashed, BigNumber.from(100))
       const tx3 = await manager.claim(1, 1, hashed, 100, proof3, overrides)
       const receipt3 = await tx3.wait()
-      expect(receipt3.gasUsed).to.eq(63504)
+      expect(receipt3.gasUsed).to.eq(63034)
 
       // second distribution, second claim
       const proof4 = tree.getProof(1, hashed, BigNumber.from(100))
       const tx4 = await manager.claim(2, 1, hashed, 100, proof4, overrides)
       const receipt4 = await tx4.wait()
-      expect(receipt4.gasUsed).to.eq(63504)
+      expect(receipt4.gasUsed).to.eq(63034)
     })
   })
 

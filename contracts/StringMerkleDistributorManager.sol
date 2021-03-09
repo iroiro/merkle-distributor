@@ -9,7 +9,7 @@ contract StringMerkleDistributorManager is IMerkleDistributorManager {
     function claim(
         uint64 distributionId,
         uint256 index,
-        string memory target,
+        string calldata target,
         uint256 amount,
         bytes32[] calldata merkleProof
     ) virtual external {
