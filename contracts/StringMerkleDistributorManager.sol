@@ -9,10 +9,10 @@ contract StringMerkleDistributorManager is IMerkleDistributorManager {
     function claim(
         uint64 distributionId,
         uint256 index,
-        string memory target,
+        string calldata target,
         uint256 amount,
         bytes32[] calldata merkleProof
-    ) virtual public {
+    ) virtual external {
         require(!isClaimed(distributionId, index), 'MerkleDistributor: Drop already claimed.');
         Distribution storage dist = distributionMap[distributionId];
         require(amount <= dist.remainingAmount, "MerkleDistributor: Insufficient token.");
