@@ -530,6 +530,61 @@ describe('StringMerkleDistributorManager', () => {
     })
   })
 
+  describe('gas prices for multiple distribution', () => {
+    let manager: Contract
+    let tree: BalanceTree
+    const NUM_LEAVES = 40
+    const elements: { hashed: string; amount: BigNumber }[] = []
+
+    const uuid =  "42330217-bdab-440d-9500-2bb253ce547f"
+    const hashed= utils.solidityKeccak256(["string"], [uuid])
+    for (let i = 0; i < NUM_LEAVES; i++) {
+      const node = { hashed, amount: BigNumber.from(100) }
+      elements.push(node)
+    }
+    tree = new BalanceTree(elements)
+
+    beforeEach('deploy', async () => {
+      manager = await deployContract(wallet0, DistributorManager, [], overrides)
+      await token.setBalance(wallet0.address, 100000)
+      await token.approve(manager.address, 100000)
+      const tx1 = await manager.addDistribution(token.address, tree.getHexRoot(), 100000, [])
+      const receipt1 = await tx1.wait()
+      expect(receipt1.gasUsed).to.eq(100531)
+      await token.setBalance(wallet0.address, 100000)
+      await token.approve(manager.address, BigNumber.from(100000))
+      const tx2 = await manager.addDistribution(token.address, tree.getHexRoot(), BigNumber.from(100000), [])
+      const receipt2 = await tx2.wait()
+      expect(receipt2.gasUsed).to.eq(85531)
+    })
+
+    it('gas differences', async () => {
+      // first distribution, first claim
+      const proof1 = tree.getProof(0, hashed, BigNumber.from(100))
+      const tx1 = await manager.claim(1, 0, hashed, 100, proof1, overrides)
+      const receipt1 = await tx1.wait()
+      expect(receipt1.gasUsed).to.eq(93492)
+
+      // second distribution, first claim
+      const proof2 = tree.getProof(0, hashed, BigNumber.from(100))
+      const tx2 = await manager.claim(2, 0, hashed, 100, proof2, overrides)
+      const receipt2 = await tx2.wait()
+      expect(receipt2.gasUsed).to.eq(78492)
+
+      // first distribution, second claim
+      const proof3 = tree.getProof(1, hashed, BigNumber.from(100))
+      const tx3 = await manager.claim(1, 1, hashed, 100, proof3, overrides)
+      const receipt3 = await tx3.wait()
+      expect(receipt3.gasUsed).to.eq(63504)
+
+      // second distribution, second claim
+      const proof4 = tree.getProof(1, hashed, BigNumber.from(100))
+      const tx4 = await manager.claim(2, 1, hashed, 100, proof4, overrides)
+      const receipt4 = await tx4.wait()
+      expect(receipt4.gasUsed).to.eq(63504)
+    })
+  })
+
   describe("multiple distribution", () => {
     let manager: Contract
     let tree: BalanceTree
