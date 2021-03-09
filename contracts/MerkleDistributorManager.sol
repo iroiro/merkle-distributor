@@ -12,7 +12,7 @@ contract MerkleDistributorManager is IMerkleDistributorManager {
         address account,
         uint256 amount,
         bytes32[] calldata merkleProof
-    ) virtual public {
+    ) virtual external {
         require(!isClaimed(distributionId, index), 'MerkleDistributor: Drop already claimed.');
         Distribution storage dist = distributionMap[distributionId];
         require(amount <= dist.remainingAmount, "MerkleDistributor: Insufficient token.");
