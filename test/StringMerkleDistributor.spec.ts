@@ -190,7 +190,7 @@ describe('StringMerkleDistributor', () => {
         const proof = tree.getProof(0, hashedUUIDList[0], BigNumber.from(100))
         const tx = await distributor.claim(0, hashedUUIDList[0], 100, proof, overrides)
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(80187)
+        expect(receipt.gasUsed).to.eq(80175)
       })
     })
 
@@ -241,7 +241,7 @@ describe('StringMerkleDistributor', () => {
         const proof = tree.getProof(9, hashedUUIDList[9], BigNumber.from(10))
         const tx = await distributor.connect(wallets[9]).claim(9, hashedUUIDList[9], 10, proof, overrides)
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(82640)
+        expect(receipt.gasUsed).to.eq(82628)
       })
 
       it('gas second down about 15k', async () => {
@@ -260,7 +260,7 @@ describe('StringMerkleDistributor', () => {
           overrides
         )
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(67672)
+        expect(receipt.gasUsed).to.eq(67660)
       })
     })
 
@@ -299,14 +299,14 @@ describe('StringMerkleDistributor', () => {
         const proof = tree.getProof(50000, hashed, BigNumber.from(100))
         const tx = await distributor.claim(50000, hashed, 100, proof, overrides)
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(93357)
+        expect(receipt.gasUsed).to.eq(93345)
       })
 
       it('gas deeper node', async () => {
         const proof = tree.getProof(90000, hashed, BigNumber.from(100))
         const tx = await distributor.claim(90000, hashed, 100, proof, overrides)
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(93367)
+        expect(receipt.gasUsed).to.eq(93355)
       })
 
       it('gas average random distribution', async () => {
@@ -320,7 +320,7 @@ describe('StringMerkleDistributor', () => {
           count++
         }
         const average = total.div(count)
-        expect(average).to.eq(78684)
+        expect(average).to.eq(78672)
       })
 
       // this is what we gas golfed by packing the bitmap
@@ -335,7 +335,7 @@ describe('StringMerkleDistributor', () => {
           count++
         }
         const average = total.div(count)
-        expect(average).to.eq(64397)
+        expect(average).to.eq(64385)
       })
 
       it('no double claims in random distribution', async () => {
