@@ -26,5 +26,7 @@ contract MerkleDistributorManager is IMerkleDistributorManager {
         dist.remainingAmount = dist.remainingAmount - amount;
 
         require(IERC20(dist.token).transfer(account, amount), 'MerkleDistributor: Transfer failed.');
+
+        emit Claimed(distributionId, account, amount);
     }
 }

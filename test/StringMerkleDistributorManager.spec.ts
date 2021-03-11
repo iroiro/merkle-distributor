@@ -6,7 +6,6 @@ import BalanceTree from '../src/string-balance-tree'
 import DistributorManager from '../build/StringMerkleDistributorManager.json'
 import TestERC20 from '../build/TestERC20.json'
 import { parseStringBalanceMap } from '../src/parse-string-balance-map'
-import { v4 as uuidv4 } from "uuid"
 
 chai.use(solidity)
 
@@ -16,10 +15,6 @@ const overrides = {
 
 const ZERO_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000'
 const ONE_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000001'
-
-const getHashedUUID: () => string = () => {
-  return utils.solidityKeccak256(["string"], [uuidv4()])
-}
 
 describe('StringMerkleDistributorManager', () => {
   const provider = new MockProvider({
@@ -137,11 +132,11 @@ describe('StringMerkleDistributorManager', () => {
         const proof0 = tree.getProof(0, hashedUUIDList[0], BigNumber.from(100))
         await expect(manager.claim(1, 0, hashedUUIDList[0], 100, proof0, overrides))
             .to.emit(manager, 'Claimed')
-            .withArgs(1, 0, wallet0.address, 100)
+            .withArgs(1, wallet0.address, 100)
         const proof1 = tree.getProof(1, hashedUUIDList[1], BigNumber.from(101))
         await expect(manager.connect(wallet1).claim(1, 1, hashedUUIDList[1], 101, proof1, overrides))
             .to.emit(manager, 'Claimed')
-            .withArgs(1, 1, wallet1.address, 101)
+            .withArgs(1, wallet1.address, 101)
       })
 
       it('transfers the token', async () => {
@@ -243,7 +238,7 @@ describe('StringMerkleDistributorManager', () => {
         const proof = tree.getProof(0, hashedUUIDList[0], BigNumber.from(100))
         const tx = await manager.claim(1, 0, hashedUUIDList[0], 100, proof, overrides)
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(88927)
+        expect(receipt.gasUsed).to.eq(88647)
       })
     })
 
@@ -283,21 +278,21 @@ describe('StringMerkleDistributorManager', () => {
         const proof = tree.getProof(4, hashedUUIDList[4], BigNumber.from(5))
         await expect(manager.connect(wallets[4]).claim(1, 4, hashedUUIDList[4], 5, proof, overrides))
             .to.emit(manager, 'Claimed')
-            .withArgs(1, 4, wallets[4].address, 5)
+            .withArgs(1, wallets[4].address, 5)
       })
 
       it('claim index 9', async () => {
         const proof = tree.getProof(9, hashedUUIDList[9], BigNumber.from(10))
         await expect(manager.connect(wallets[9]).claim(1, 9, hashedUUIDList[9], 10, proof, overrides))
             .to.emit(manager, 'Claimed')
-            .withArgs(1, 9, wallets[9].address, 10)
+            .withArgs(1, wallets[9].address, 10)
       })
 
       it('gas', async () => {
         const proof = tree.getProof(9, hashedUUIDList[9], BigNumber.from(10))
         const tx = await manager.claim(1, 9, hashedUUIDList[9], 10, proof, overrides)
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(91379)
+        expect(receipt.gasUsed).to.eq(91099)
       })
 
       it('gas second down about 15k', async () => {
@@ -318,7 +313,7 @@ describe('StringMerkleDistributorManager', () => {
             overrides
         )
         const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(61411)
+        expect(receipt.gasUsed).to.eq(61131)
       })
     })
 
@@ -372,12 +367,12 @@ describe('StringMerkleDistributorManager', () => {
     let tree: BalanceTree
     const NUM_LEAVES_LIST = [40, 50, 60]
     const NUM_SAMPLES_LIST = [5, 10, 20]
-    const GAS_LIST = [93042, 93042, 93042]
-    const SECOND_GAS_LIST = [63036, 63036, 63036]
-    const DEEPER_NODE_GAS_LIST = [93056, 93056, 93056]
-    const AVERAGE_GAS_LIST = [69040, 66042, 64541]
-    const FIRST25_AVERAGE_GAS_LIST = [64207, 64207, 64207]
-    const ALL_AVERAGE_GAS_LIST = [63768, 63606, 63483]
+    const GAS_LIST = [92762, 92762, 92762]
+    const SECOND_GAS_LIST = [62756, 62756, 62756]
+    const DEEPER_NODE_GAS_LIST = [92776, 92776, 92776]
+    const AVERAGE_GAS_LIST = [68760, 65762, 64261]
+    const FIRST25_AVERAGE_GAS_LIST = [63927, 63927, 63927]
+    const ALL_AVERAGE_GAS_LIST = [63488, 63326, 63203]
 
     for(let j = 0; j < NUM_LEAVES_LIST.length; j++) {
       describe(`leaves: ${NUM_LEAVES_LIST[j]}`, () => {
@@ -521,7 +516,7 @@ describe('StringMerkleDistributorManager', () => {
         const claim = claims[hashed]
         await expect(manager.claim(1, claim.index, hashed, claim.amount, claim.proof, overrides))
             .to.emit(manager, 'Claimed')
-            .withArgs(1, claim.index, wallet0.address, claim.amount)
+            .withArgs(1, wallet0.address, claim.amount)
         await expect(manager.claim(1, claim.index, hashed, claim.amount, claim.proof, overrides)).to.be.revertedWith(
             'MerkleDistributor: Drop already claimed.'
         )
@@ -563,25 +558,25 @@ describe('StringMerkleDistributorManager', () => {
       const proof1 = tree.getProof(0, hashed, BigNumber.from(100))
       const tx1 = await manager.claim(1, 0, hashed, 100, proof1, overrides)
       const receipt1 = await tx1.wait()
-      expect(receipt1.gasUsed).to.eq(93022)
+      expect(receipt1.gasUsed).to.eq(92742)
 
       // second distribution, first claim
       const proof2 = tree.getProof(0, hashed, BigNumber.from(100))
       const tx2 = await manager.claim(2, 0, hashed, 100, proof2, overrides)
       const receipt2 = await tx2.wait()
-      expect(receipt2.gasUsed).to.eq(78022)
+      expect(receipt2.gasUsed).to.eq(77742)
 
       // first distribution, second claim
       const proof3 = tree.getProof(1, hashed, BigNumber.from(100))
       const tx3 = await manager.claim(1, 1, hashed, 100, proof3, overrides)
       const receipt3 = await tx3.wait()
-      expect(receipt3.gasUsed).to.eq(63034)
+      expect(receipt3.gasUsed).to.eq(62754)
 
       // second distribution, second claim
       const proof4 = tree.getProof(1, hashed, BigNumber.from(100))
       const tx4 = await manager.claim(2, 1, hashed, 100, proof4, overrides)
       const receipt4 = await tx4.wait()
-      expect(receipt4.gasUsed).to.eq(63034)
+      expect(receipt4.gasUsed).to.eq(62754)
     })
   })
 

@@ -26,5 +26,7 @@ contract StringMerkleDistributorManager is IMerkleDistributorManager {
         dist.remainingAmount = dist.remainingAmount - amount;
 
         require(IERC20(dist.token).transfer(msg.sender, amount), 'MerkleDistributor: Transfer failed.');
+
+        emit Claimed(distributionId, msg.sender, amount);
     }
 }
