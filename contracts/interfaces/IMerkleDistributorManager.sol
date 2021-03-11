@@ -2,7 +2,6 @@
 pragma solidity =0.7.6;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 import "../SafeMath64.sol";
 
 contract IMerkleDistributorManager {
@@ -62,7 +61,6 @@ contract IMerkleDistributorManager {
 
     event Claimed(
         uint64 indexed distributionId,
-        uint256 index,
         address indexed account,
         uint256 amount
     );

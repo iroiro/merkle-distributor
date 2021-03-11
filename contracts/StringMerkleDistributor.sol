@@ -40,7 +40,8 @@ contract StringMerkleDistributor is IStringMerkleDistributor {
         require(!isClaimed(index), 'StringMerkleDistributor: Drop already claimed.');
 
         // Verify the merkle proof.
-        bytes32 node = keccak256(abi.encodePacked(index, target, amount));
+        bytes32 hashed = keccak256(abi.encodePacked(target));
+        bytes32 node = keccak256(abi.encodePacked(index, hashed, amount));
         require(MerkleProof.verify(merkleProof, merkleRoot, node), 'StringMerkleDistributor: Invalid proof.');
 
         // Mark it claimed and send the token.
