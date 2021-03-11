@@ -1,5 +1,5 @@
 import MerkleTree from './merkle-tree'
-import { BigNumber, utils } from 'ethers'
+import {BigNumber, ethers, utils} from 'ethers'
 
 export default class BalanceTree {
   private readonly tree: MerkleTree
@@ -29,7 +29,7 @@ export default class BalanceTree {
   // keccak256(abi.encode(index, account, amount))
   public static toNode(index: number | BigNumber, hashed: string, amount: BigNumber): Buffer {
     return Buffer.from(
-      utils.solidityKeccak256(['uint256', 'string', 'uint256'], [index, hashed, amount]).substr(2),
+      utils.solidityKeccak256(['uint256', 'bytes32', 'uint256'], [index, hashed, amount]).substr(2),
       'hex'
     )
   }
