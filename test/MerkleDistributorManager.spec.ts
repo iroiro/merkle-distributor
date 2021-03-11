@@ -621,4 +621,45 @@ describe('MerkleDistributorManager', () => {
       });
     });
   });
+
+  describe("multiple distribution 2", () => {
+    let manager: Contract
+    let tree: BalanceTree
+
+    describe("same tokens", () => {
+      beforeEach(async () => {
+        tree = new BalanceTree([
+          { account: wallet0.address, amount: BigNumber.from(100) },
+          { account: wallet1.address, amount: BigNumber.from(100) }
+        ])
+        manager = await deployContract(wallet0, DistributorManager, [], overrides)
+        await token.setBalance(wallet0.address, 1000)
+        await token.approve(manager.address, 1000);
+        await manager.addDistribution(token.address, tree.getHexRoot(), 1000, [])
+        await token.setBalance(wallet0.address, 1000)
+        await token.approve(manager.address, 1000);
+        await manager.addDistribution(token.address, tree.getHexRoot(), 1000, [])
+      });
+
+      it("decrease remaining map", async () => {
+        const proof0 = tree.getProof(0, wallet0.address, BigNumber.from(100))
+        const proof1 = tree.getProof(1, wallet1.address, BigNumber.from(100))
+        await manager.claim( 1, 0, wallet0.address, 100, proof0)
+        expect(await manager.remainingAmount("1")).to.equal(900);
+        expect(await manager.remainingAmount("2")).to.equal(1000);
+
+        await manager.claim( 1, 1, wallet1.address, 100, proof1)
+        expect(await manager.remainingAmount("1")).to.equal(800);
+        expect(await manager.remainingAmount("2")).to.equal(1000);
+
+        await manager.claim( 2, 0, wallet0.address, 100, proof0)
+        expect(await manager.remainingAmount("1")).to.equal(800);
+        expect(await manager.remainingAmount("2")).to.equal(900);
+
+        await manager.claim( 2, 1, wallet1.address, 100, proof1)
+        expect(await manager.remainingAmount("1")).to.equal(800);
+        expect(await manager.remainingAmount("2")).to.equal(800);
+      });
+    });
+  });
 })
