@@ -221,13 +221,6 @@ describe('MerkleDistributorManager', () => {
           'MerkleDistributor: Invalid proof.'
         )
       })
-
-      it('gas', async () => {
-        const proof = tree.getProof(0, await wallet0.getAddress(), BigNumber.from(100))
-        const tx = await manager.claim(1, 0, await wallet0.getAddress(), 100, proof, overrides)
-        const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(88015)
-      })
     })
 
     describe('larger tree', () => {
@@ -258,34 +251,6 @@ describe('MerkleDistributorManager', () => {
         await expect(manager.claim(1, 9, await wallets[9].getAddress(), 10, proof, overrides))
           .to.emit(manager, 'Claimed')
           .withArgs(1, await wallets[9].getAddress(), 10)
-      })
-
-      it('gas', async () => {
-        const proof = tree.getProof(9, await wallets[9].getAddress(), BigNumber.from(10))
-        const tx = await manager.claim(1, 9, await wallets[9].getAddress(), 10, proof, overrides)
-        const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(91358)
-      })
-
-      it('gas second down about 15k', async () => {
-        await manager.claim(
-          1,
-          0,
-          await wallets[0].getAddress(),
-          1,
-          tree.getProof(0, await wallets[0].getAddress(), BigNumber.from(1)),
-          overrides
-        )
-        const tx = await manager.claim(
-          1,
-          1,
-          await wallets[1].getAddress(),
-          2,
-          tree.getProof(1, await wallets[1].getAddress(), BigNumber.from(2)),
-          overrides
-        )
-        const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(76358)
       })
     })
 
@@ -329,158 +294,6 @@ describe('MerkleDistributorManager', () => {
             'MerkleDistributor: Drop already claimed.'
           )
         }
-      })
-    })
-
-    describe('gas prices for situations ', () => {
-      let manager: Contract
-      let tree: BalanceTree
-      const NUM_LEAVES_LIST = [40, 50, 60]
-      const NUM_SAMPLES_LIST = [5, 10, 20]
-      const GAS_LIST = [92175, 92195, 92185]
-      const SECOND_GAS_LIST = [62163, 62165, 62187]
-      const DEEPER_NODE_GAS_LIST = [92187, 92189, 92177]
-      const AVERAGE_GAS_LIST = [68203, 65182, 63599]
-      const FIRST25_AVERAGE_GAS_LIST = [63123, 63387, 63324]
-      const ALL_AVERAGE_GAS_LIST = [62607, 62688, 62633]
-
-      for(let j = 0; j < NUM_LEAVES_LIST.length; j++) {
-        describe(`leaves: ${NUM_LEAVES_LIST[j]}`, () => {
-          beforeEach('deploy', async () => {
-            const walletAddress = await wallet0.getAddress()
-            const elements: { account: string; amount: BigNumber }[] = []
-            for (let i = 0; i < NUM_LEAVES_LIST[j]; i++) {
-              const node = {account: walletAddress, amount: BigNumber.from(100)}
-              elements.push(node)
-            }
-            tree = new BalanceTree(elements)
-
-            manager = await managerFactory.deploy()
-            await token.setBalance(await wallet0.getAddress(), constants.MaxUint256)
-            await token.approve(manager.address, constants.MaxUint256)
-            await manager.addDistribution(token.address, tree.getHexRoot(), constants.MaxUint256, [])
-          })
-
-          it('gas', async () => {
-            const proof = tree.getProof(0, await wallet0.getAddress(), BigNumber.from(100))
-            const tx = await manager.claim(1, 0, await wallet0.getAddress(), 100, proof, overrides)
-            const receipt = await tx.wait()
-            expect(receipt.gasUsed).to.eq(GAS_LIST[j])
-          })
-
-          it('gas second down about 15k', async () => {
-            const proof1 = tree.getProof(0, await wallet0.getAddress(), BigNumber.from(100))
-            await manager.claim(1, 0, await wallet0.getAddress(), 100, proof1, overrides)
-            const proof2 = tree.getProof(1, await wallet0.getAddress(), BigNumber.from(100))
-            const tx2 = await manager.claim(1, 1, await wallet0.getAddress(), 100, proof2, overrides)
-            const receipt = await tx2.wait()
-            expect(receipt.gasUsed).to.eq(SECOND_GAS_LIST[j])
-          })
-
-          it('gas deeper node', async () => {
-            const proof = tree.getProof(35, await wallet0.getAddress(), BigNumber.from(100))
-            const tx = await manager.claim(1, 35, await wallet0.getAddress(), 100, proof, overrides)
-            const receipt = await tx.wait()
-            expect(receipt.gasUsed).to.eq(DEEPER_NODE_GAS_LIST[j])
-          })
-
-          it('gas average random distribution', async () => {
-            let total: BigNumber = BigNumber.from(0)
-            let count: number = 0
-            for (let i = 0; i < NUM_LEAVES_LIST[j]; i += NUM_LEAVES_LIST[j] / NUM_SAMPLES_LIST[j]) {
-              const proof = tree.getProof(i, await wallet0.getAddress(), BigNumber.from(100))
-              const tx = await manager.claim(1, i, await wallet0.getAddress(), 100, proof, overrides)
-              const receipt = await tx.wait()
-              total = total.add(receipt.gasUsed)
-              count++
-            }
-            const average = total.div(count)
-            expect(average).to.eq(AVERAGE_GAS_LIST[j])
-          })
-
-          // this is what we gas golfed by packing the bitmap
-          it('gas average first 25', async () => {
-            let total: BigNumber = BigNumber.from(0)
-            let count: number = 0
-            for (let i = 0; i < 25; i++) {
-              const proof = tree.getProof(i, await wallet0.getAddress(), BigNumber.from(100))
-              const tx = await manager.claim(1, i, await wallet0.getAddress(), 100, proof, overrides)
-              const receipt = await tx.wait()
-              total = total.add(receipt.gasUsed)
-              count++
-            }
-            const average = total.div(count)
-            expect(average).to.eq(FIRST25_AVERAGE_GAS_LIST[j])
-          })
-
-          it('gas average of all', async () => {
-            let total: BigNumber = BigNumber.from(0)
-            let count: number = 0
-            for (let i = 0; i < NUM_LEAVES_LIST[j]; i++) {
-              const proof = tree.getProof(i, await wallet0.getAddress(), BigNumber.from(100))
-              const tx = await manager.claim(1, i, await wallet0.getAddress(), 100, proof, overrides)
-              const receipt = await tx.wait()
-              total = total.add(receipt.gasUsed)
-              count++
-            }
-            const average = total.div(count)
-            expect(average).to.eq(ALL_AVERAGE_GAS_LIST[j])
-          })
-        })
-      }
-    })
-
-    describe('gas prices for multiple distribution', () => {
-      let manager: Contract
-      let tree: BalanceTree
-      const NUM_LEAVES= 40
-
-      beforeEach('deploy', async () => {
-        const elements: { account: string; amount: BigNumber }[] = []
-        const walletAddress = await wallet0.getAddress()
-        for (let i = 0; i < NUM_LEAVES; i++) {
-          const node = {account: walletAddress, amount: BigNumber.from(100)}
-          elements.push(node)
-        }
-        tree = new BalanceTree(elements)
-
-        manager = await managerFactory.deploy()
-        await token.setBalance(await wallet0.getAddress(), 100000)
-        await token.approve(manager.address, 100000)
-        const tx1 = await manager.addDistribution(token.address, tree.getHexRoot(), 100000, [])
-        const receipt1 = await tx1.wait()
-        expect(receipt1.gasUsed).to.eq(100955)
-        await token.setBalance(await wallet0.getAddress(), 100000)
-        await token.approve(manager.address, BigNumber.from(100000))
-        const tx2 = await manager.addDistribution(token.address, tree.getHexRoot(), BigNumber.from(100000), [])
-        const receipt2 = await tx2.wait()
-        expect(receipt2.gasUsed).to.eq(85955)
-      })
-
-      it('gas differences', async () => {
-        // first distribution, first claim
-        const proof1 = tree.getProof(0, await wallet0.getAddress(), BigNumber.from(100))
-        const tx1 = await manager.claim(1, 0, await wallet0.getAddress(), 100, proof1, overrides)
-        const receipt1 = await tx1.wait()
-        expect(receipt1.gasUsed).to.eq(92175)
-
-        // second distribution, first claim
-        const proof2 = tree.getProof(0, await wallet0.getAddress(), BigNumber.from(100))
-        const tx2 = await manager.claim(2, 0, await wallet0.getAddress(), 100, proof2, overrides)
-        const receipt2 = await tx2.wait()
-        expect(receipt2.gasUsed).to.eq(77175)
-
-        // first distribution, second claim
-        const proof3 = tree.getProof(1, await wallet0.getAddress(), BigNumber.from(100))
-        const tx3 = await manager.claim(1, 1, await wallet0.getAddress(), 100, proof3, overrides)
-        const receipt3 = await tx3.wait()
-        expect(receipt3.gasUsed).to.eq(62163)
-
-        // second distribution, second claim
-        const proof4 = tree.getProof(1, await wallet0.getAddress(), BigNumber.from(100))
-        const tx4 = await manager.claim(2, 1, await wallet0.getAddress(), 100, proof4, overrides)
-        const receipt4 = await tx4.wait()
-        expect(receipt4.gasUsed).to.eq(62163)
       })
     })
   })

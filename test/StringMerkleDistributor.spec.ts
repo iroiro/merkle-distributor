@@ -174,13 +174,6 @@ describe('StringMerkleDistributor', () => {
           'MerkleDistributor: Invalid proof.'
         )
       })
-
-      it('gas', async () => {
-        const proof = tree.getProof(0, hashedUUIDList[0], BigNumber.from(100))
-        const tx = await distributor.claim(0, uuidList[0], 100, proof, overrides)
-        const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(80307)
-      })
     })
 
     describe('larger tree', () => {
@@ -225,32 +218,6 @@ describe('StringMerkleDistributor', () => {
           .to.emit(distributor, 'Claimed')
           .withArgs(9, await wallets[9].getAddress(), 10)
       })
-
-      it('gas', async () => {
-        const proof = tree.getProof(9, hashedUUIDList[9], BigNumber.from(10))
-        const tx = await distributor.connect(wallets[9]).claim(9, uuidList[9], 10, proof, overrides)
-        const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(82797)
-      })
-
-      it('gas second down about 15k', async () => {
-        await distributor.claim(
-          0,
-          uuidList[0],
-          1,
-          tree.getProof(0, hashedUUIDList[0], BigNumber.from(1)),
-          overrides
-        )
-        const tx = await distributor.connect(wallets[1]).claim(
-          1,
-          uuidList[1],
-          2,
-          tree.getProof(1, hashedUUIDList[1], BigNumber.from(2)),
-          overrides
-        )
-        const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(66150)
-      })
     })
 
     describe('realistic size tree', () => {
@@ -282,49 +249,6 @@ describe('StringMerkleDistributor', () => {
       beforeEach('deploy', async () => {
         distributor = await distFactory.deploy(token.address, tree.getHexRoot())
         await token.setBalance(distributor.address, constants.MaxUint256)
-      })
-
-      it('gas', async () => {
-        const proof = tree.getProof(50000, hashed, BigNumber.from(100))
-        const tx = await distributor.claim(50000, uuid, 100, proof, overrides)
-        const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(93683)
-      })
-
-      it('gas deeper node', async () => {
-        const proof = tree.getProof(90000, hashed, BigNumber.from(100))
-        const tx = await distributor.claim(90000, uuid, 100, proof, overrides)
-        const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(93711)
-      })
-
-      it('gas average random distribution', async () => {
-        let total: BigNumber = BigNumber.from(0)
-        let count: number = 0
-        for (let i = 0; i < NUM_LEAVES; i += NUM_LEAVES / NUM_SAMPLES) {
-          const proof = tree.getProof(i, hashed, BigNumber.from(100))
-          const tx = await distributor.claim(i, uuid, 100, proof, overrides)
-          const receipt = await tx.wait()
-          total = total.add(receipt.gasUsed)
-          count++
-        }
-        const average = total.div(count)
-        expect(average).to.eq(79140)
-      })
-
-      // this is what we gas golfed by packing the bitmap
-      it('gas average first 25', async () => {
-        let total: BigNumber = BigNumber.from(0)
-        let count: number = 0
-        for (let i = 0; i < 25; i++) {
-          const proof = tree.getProof(i, hashed, BigNumber.from(100))
-          const tx = await distributor.claim(i, uuid, 100, proof, overrides)
-          const receipt = await tx.wait()
-          total = total.add(receipt.gasUsed)
-          count++
-        }
-        const average = total.div(count)
-        expect(average).to.eq(64859)
       })
 
       it('no double claims in random distribution', async () => {
