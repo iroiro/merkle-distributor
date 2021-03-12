@@ -2,3 +2,9 @@ node_modules/
 build/
 wrangler.toml
 dist/
+
+artifacts/
+cache/
+coverage/
+
+coverage.json
