@@ -22,12 +22,15 @@ describe('StringMerkleDistributorManager', () => {
 
   let token: Contract
   let token2: Contract
+  let falsyToken: Contract
 
   beforeEach('deploy token', async () => {
     managerFactory = await ethers.getContractFactory("StringMerkleDistributorManager");
     const Token = await ethers.getContractFactory("TestERC20");
     token = await Token.deploy("Token", "TKN", 0);
     token2 = await Token.deploy("Token2", "TKN2", 0);
+    const FalsyToken = await ethers.getContractFactory("FalsyTestERC20");
+    falsyToken = await FalsyToken.deploy("FalsyToken", "FLS", 0);
     wallets = await ethers.getSigners();
     [wallet0, wallet1] = wallets
   })
@@ -122,6 +125,9 @@ describe('StringMerkleDistributorManager', () => {
         await token.setBalance(await wallet0.getAddress(), 201)
         await token.approve(manager.address, 201)
         await manager.addDistribution(token.address, tree.getHexRoot(), 201, [])
+        await falsyToken.setBalance(await wallet0.getAddress(), 201)
+        await falsyToken.approve(manager.address, 201)
+        await manager.addDistribution(falsyToken.address, tree.getHexRoot(), 201, [])
       })
 
       it('successful claim', async () => {
@@ -227,6 +233,13 @@ describe('StringMerkleDistributorManager', () => {
         const proof0 = tree.getProof(0, hashedUUIDList[0], BigNumber.from(100))
         await expect(manager.claim(1, 0, uuidList[0], 101, proof0, overrides)).to.be.revertedWith(
             'MerkleDistributor: Invalid proof.'
+        )
+      })
+
+      it('revert if ERC20 contract returns false on transfer', async () => {
+        const proof0 = tree.getProof(0, hashedUUIDList[0], BigNumber.from(100))
+        await expect(manager.claim(2, 0, uuidList[0], 100, proof0, overrides)).to.be.revertedWith(
+            'MerkleDistributor: Transfer failed.'
         )
       })
     })
