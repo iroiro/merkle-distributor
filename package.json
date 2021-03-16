@@ -24,19 +24,24 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@openzeppelin/contracts": "3.4.0",
     "@types/chai": "^4.2.6",
     "@types/mocha": "^5.2.7",
     "@types/uuid": "^8.3.0",
     "axios": "^0.20.0",
-    "chai": "^4.2.0",
+    "chai": "^4.3.3",
     "commander": "^6.1.0",
-    "ethereum-waffle": "^3.0.0",
+    "ethereum-waffle": "^3.3.0",
     "ethereumjs-util": "^7.0.4",
+    "hardhat": "^2.1.1",
+    "hardhat-gas-reporter": "^1.0.4",
     "mocha": "^6.2.2",
     "prettier": "^2.0.5",
     "rimraf": "^3.0.0",
     "solc": "0.7.6",
+    "solidity-coverage": "^0.7.16",
     "ts-node": "^8.5.4",
     "typescript": "^3.7.3",
     "uuid": "^8.3.2"
@@ -45,13 +50,14 @@
     "precompile": "rimraf ./build/",
     "compile": "waffle && tsc",
     "pretest": "yarn compile",
-    "test": "mocha",
+    "test": "npx hardhat test",
+    "coverage": "npx hardhat coverage",
     "generate-merkle-root": "ts-node scripts/generate-merkle-root.ts",
     "generate-string-merkle-root": "ts-node scripts/generate-string-merkle-root.ts",
     "generate-merkle-root:example": "ts-node scripts/generate-merkle-root.ts --input scripts/example.json",
     "prepublishOnly": "yarn test"
   },
   "dependencies": {
-    "ethers": "^5.0.1"
+    "ethers": "^5.0.32"
   }
 }

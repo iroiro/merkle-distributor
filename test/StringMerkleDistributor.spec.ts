@@ -1,16 +1,11 @@
-import chai, { expect } from 'chai'
-import { solidity, MockProvider, deployContract } from 'ethereum-waffle'
-import {Contract, BigNumber, constants, utils} from 'ethers'
+import { expect } from 'chai'
+import {Contract, BigNumber, ContractFactory, constants, utils, Signer } from 'ethers'
 import BalanceTree from '../src/string-balance-tree'
-
-import Distributor from '../build/StringMerkleDistributor.json'
 import TestERC20 from '../build/TestERC20.json'
 import { parseStringBalanceMap } from '../src/parse-string-balance-map'
-
-chai.use(solidity)
+import { ethers } from "hardhat";
 
 const overrides = {
-  gasLimit: 9999999,
 }
 
 const ZERO_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000'
@@ -18,46 +13,43 @@ const ZERO_BYTES32 = '0x00000000000000000000000000000000000000000000000000000000
 const uuid =  "42330217-bdab-440d-9500-2bb253ce547f"
 
 describe('StringMerkleDistributor', () => {
-  const provider = new MockProvider({
-    ganacheOptions: {
-      hardfork: 'istanbul',
-      mnemonic: 'horn horn horn horn horn horn horn horn horn horn horn horn',
-      gasLimit: 9999999,
-    },
-  })
+  let wallets: Signer[]
+  let wallet0: Signer, wallet1: Signer;
+  let token: Contract;
+  let distFactory: ContractFactory
 
-  const wallets = provider.getWallets()
-  const [wallet0, wallet1] = wallets
-
-  let token: Contract
   beforeEach('deploy token', async () => {
-    token = await deployContract(wallet0, TestERC20, ['Token', 'TKN', 0], overrides)
+    distFactory = await ethers.getContractFactory("StringMerkleDistributor");
+    const Token = await ethers.getContractFactory("TestERC20");
+    token = await Token.deploy("Token", "TKN", 0);
+    wallets = await ethers.getSigners();
+    [wallet0, wallet1] = wallets
   })
 
   describe('#token', () => {
     it('returns the token address', async () => {
-      const distributor = await deployContract(wallet0, Distributor, [token.address, ZERO_BYTES32], overrides)
+      const distributor = await distFactory.deploy(token.address, ZERO_BYTES32)
       expect(await distributor.token()).to.eq(token.address)
     })
   })
 
   describe('#merkleRoot', () => {
     it('returns the zero merkle root', async () => {
-      const distributor = await deployContract(wallet0, Distributor, [token.address, ZERO_BYTES32], overrides)
+      const distributor = await distFactory.deploy(token.address, ZERO_BYTES32)
       expect(await distributor.merkleRoot()).to.eq(ZERO_BYTES32)
     })
   })
 
   describe('#claim', () => {
     it('fails for empty proof', async () => {
-      const distributor = await deployContract(wallet0, Distributor, [token.address, ZERO_BYTES32], overrides)
+      const distributor = await distFactory.deploy(token.address, ZERO_BYTES32)
       await expect(distributor.claim(0, uuid, 10, [])).to.be.revertedWith(
         'MerkleDistributor: Invalid proof.'
       )
     })
 
     it('fails for invalid index', async () => {
-      const distributor = await deployContract(wallet0, Distributor, [token.address, ZERO_BYTES32], overrides)
+      const distributor = await distFactory.deploy(token.address, ZERO_BYTES32)
       await expect(distributor.claim(0, uuid, 10, [])).to.be.revertedWith(
         'MerkleDistributor: Invalid proof.'
       )
@@ -79,7 +71,7 @@ describe('StringMerkleDistributor', () => {
           { hashed: hashedUUIDList[0], amount: BigNumber.from(100) },
           { hashed: hashedUUIDList[1], amount: BigNumber.from(101) },
         ])
-        distributor = await deployContract(wallet0, Distributor, [token.address, tree.getHexRoot()], overrides)
+        distributor = await distFactory.deploy(token.address, tree.getHexRoot())
         await token.setBalance(distributor.address, 201)
       })
 
@@ -87,19 +79,19 @@ describe('StringMerkleDistributor', () => {
         const proof0 = tree.getProof(0, hashedUUIDList[0], BigNumber.from(100))
         await expect(distributor.claim(0, uuidList[0], 100, proof0, overrides))
           .to.emit(distributor, 'Claimed')
-          .withArgs(0, wallet0.address, 100)
+          .withArgs(0, await wallet0.getAddress(), 100)
 
         const proof1 = tree.getProof(1, hashedUUIDList[1], BigNumber.from(101))
         await expect(distributor.connect(wallet1).claim(1, uuidList[1], 101, proof1, overrides))
           .to.emit(distributor, 'Claimed')
-          .withArgs(1, wallet1.address, 101)
+          .withArgs(1, await wallet1.getAddress(), 101)
       })
 
       it('transfers the token', async () => {
         const proof0 = tree.getProof(0, hashedUUIDList[0], BigNumber.from(100))
-        expect(await token.balanceOf(wallet0.address)).to.eq(0)
+        expect(await token.balanceOf(await wallet0.getAddress())).to.eq(0)
         await distributor.claim(0, uuidList[0], 100, proof0, overrides)
-        expect(await token.balanceOf(wallet0.address)).to.eq(100)
+        expect(await token.balanceOf(await wallet0.getAddress())).to.eq(100)
       })
 
       it('must have enough to transfer', async () => {
@@ -171,7 +163,7 @@ describe('StringMerkleDistributor', () => {
 
       it('cannot claim for uuid hash other than proof', async () => {
         const proof0 = tree.getProof(0, hashedUUIDList[0], BigNumber.from(100))
-        await expect(distributor.claim(1, wallet1.address, 101, proof0, overrides)).to.be.revertedWith(
+        await expect(distributor.claim(1, await wallet1.getAddress(), 101, proof0, overrides)).to.be.revertedWith(
           'MerkleDistributor: Invalid proof.'
         )
       })
@@ -181,13 +173,6 @@ describe('StringMerkleDistributor', () => {
         await expect(distributor.claim(0, uuidList[0], 101, proof0, overrides)).to.be.revertedWith(
           'MerkleDistributor: Invalid proof.'
         )
-      })
-
-      it('gas', async () => {
-        const proof = tree.getProof(0, hashedUUIDList[0], BigNumber.from(100))
-        const tx = await distributor.claim(0, uuidList[0], 100, proof, overrides)
-        const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(79746)
       })
     })
 
@@ -216,7 +201,7 @@ describe('StringMerkleDistributor', () => {
             return { hashed, amount: BigNumber.from(ix + 1) }
           })
         )
-        distributor = await deployContract(wallet0, Distributor, [token.address, tree.getHexRoot()], overrides)
+        distributor = await distFactory.deploy(token.address, tree.getHexRoot())
         await token.setBalance(distributor.address, 201)
       })
 
@@ -224,40 +209,14 @@ describe('StringMerkleDistributor', () => {
         const proof = tree.getProof(4, hashedUUIDList[4], BigNumber.from(5))
         await expect(distributor.connect(wallets[4]).claim(4, uuidList[4], 5, proof, overrides))
           .to.emit(distributor, 'Claimed')
-          .withArgs(4, wallets[4].address, 5)
+          .withArgs(4, await wallets[4].getAddress(), 5)
       })
 
       it('claim index 9', async () => {
         const proof = tree.getProof(9, hashedUUIDList[9], BigNumber.from(10))
         await expect(distributor.connect(wallets[9]).claim(9, uuidList[9], 10, proof, overrides))
           .to.emit(distributor, 'Claimed')
-          .withArgs(9, wallets[9].address, 10)
-      })
-
-      it('gas', async () => {
-        const proof = tree.getProof(9, hashedUUIDList[9], BigNumber.from(10))
-        const tx = await distributor.connect(wallets[9]).claim(9, uuidList[9], 10, proof, overrides)
-        const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(82197)
-      })
-
-      it('gas second down about 15k', async () => {
-        await distributor.claim(
-          0,
-          uuidList[0],
-          1,
-          tree.getProof(0, hashedUUIDList[0], BigNumber.from(1)),
-          overrides
-        )
-        const tx = await distributor.connect(wallets[1]).claim(
-          1,
-          uuidList[1],
-          2,
-          tree.getProof(1, hashedUUIDList[1], BigNumber.from(2)),
-          overrides
-        )
-        const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(65576)
+          .withArgs(9, await wallets[9].getAddress(), 10)
       })
     })
 
@@ -288,51 +247,8 @@ describe('StringMerkleDistributor', () => {
       })
 
       beforeEach('deploy', async () => {
-        distributor = await deployContract(wallet0, Distributor, [token.address, tree.getHexRoot()], overrides)
+        distributor = await distFactory.deploy(token.address, tree.getHexRoot())
         await token.setBalance(distributor.address, constants.MaxUint256)
-      })
-
-      it('gas', async () => {
-        const proof = tree.getProof(50000, hashed, BigNumber.from(100))
-        const tx = await distributor.claim(50000, uuid, 100, proof, overrides)
-        const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(92914)
-      })
-
-      it('gas deeper node', async () => {
-        const proof = tree.getProof(90000, hashed, BigNumber.from(100))
-        const tx = await distributor.claim(90000, uuid, 100, proof, overrides)
-        const receipt = await tx.wait()
-        expect(receipt.gasUsed).to.eq(92942)
-      })
-
-      it('gas average random distribution', async () => {
-        let total: BigNumber = BigNumber.from(0)
-        let count: number = 0
-        for (let i = 0; i < NUM_LEAVES; i += NUM_LEAVES / NUM_SAMPLES) {
-          const proof = tree.getProof(i, hashed, BigNumber.from(100))
-          const tx = await distributor.claim(i, uuid, 100, proof, overrides)
-          const receipt = await tx.wait()
-          total = total.add(receipt.gasUsed)
-          count++
-        }
-        const average = total.div(count)
-        expect(average).to.eq(78373)
-      })
-
-      // this is what we gas golfed by packing the bitmap
-      it('gas average first 25', async () => {
-        let total: BigNumber = BigNumber.from(0)
-        let count: number = 0
-        for (let i = 0; i < 25; i++) {
-          const proof = tree.getProof(i, hashed, BigNumber.from(100))
-          const tx = await distributor.claim(i, uuid, 100, proof, overrides)
-          const receipt = await tx.wait()
-          total = total.add(receipt.gasUsed)
-          count++
-        }
-        const average = total.div(count)
-        expect(average).to.eq(64090)
       })
 
       it('no double claims in random distribution', async () => {
@@ -370,7 +286,7 @@ describe('StringMerkleDistributor', () => {
       })
       expect(tokenTotal).to.eq('0x02ee') // 750
       claims = innerClaims
-      distributor = await deployContract(wallet0, Distributor, [token.address, merkleRoot], overrides)
+      distributor = await distFactory.deploy(token.address, merkleRoot)
       await token.setBalance(distributor.address, tokenTotal)
     })
 
@@ -421,7 +337,7 @@ describe('StringMerkleDistributor', () => {
         const claim = claims[uuidMappings[i].hashed]
         await expect(distributor.claim(claim.index, uuidMappings[i].raw, claim.amount, claim.proof, overrides))
           .to.emit(distributor, 'Claimed')
-          .withArgs(claim.index, wallet0.address, claim.amount)
+          .withArgs(claim.index, await wallet0.getAddress(), claim.amount)
         await expect(distributor.claim(claim.index, uuidMappings[i].raw, claim.amount, claim.proof, overrides)).to.be.revertedWith(
           'MerkleDistributor: Drop already claimed.'
         )
