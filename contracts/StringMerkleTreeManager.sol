@@ -11,7 +11,7 @@ contract StringMerkleTreeManager is IMerkleTreeManager {
         string calldata target,
         uint256 amount,
         bytes32[] calldata merkleProof
-    ) virtual external returns(bool) {
+    ) virtual public returns(bool) {
         require(!isProven(treeId, index), 'MerkleTree: Already proven.');
         bytes32 merkleRoot = merkleRootMap[treeId];
 
