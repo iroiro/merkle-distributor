@@ -6,7 +6,7 @@ import "./interfaces/IMerkleTreeManager.sol";
 
 contract StringMerkleTreeManager is IMerkleTreeManager {
     function proof(
-        uint64 treeId,
+        uint256 treeId,
         uint256 index,
         string calldata target,
         uint256 amount,
