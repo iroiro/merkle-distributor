@@ -6,7 +6,7 @@ import "./interfaces/IMerkleTreeManager.sol";
 
 contract MerkleTreeManager is IMerkleTreeManager {
     function proof(
-        uint64 treeId,
+        uint256 treeId,
         uint256 index,
         address account,
         uint256 amount,
